@@ -105,12 +105,44 @@ def generate_customers(num_customers):
         })
     return customers
 
-# Generate events
+# Generate subevents with weighted performers
+def generate_subevents(events, performers, venue_ids):
+    subevents = []
+    subevent_types = ['concert', 'conference', 'seminar', 'workshop', 'tradeshow', 'fundraiser', 'expo']
+    subevent_id = 1
+
+    # Create weighted probabilities for performers (some will perform more)
+    performer_ids = [performer['performer_id'] for performer in performers]
+    performer_weights = np.random.dirichlet(np.ones(len(performers)), size=1)[0]  # Dirichlet distribution
+
+    for event in events:
+        num_subevents = random.randint(1, 5)
+        for _ in range(num_subevents):
+            performer_id = np.random.choice(performer_ids, p=performer_weights)  # Weighted performer selection
+            venue_id = random.choice(venue_ids)
+            subevent_start = datetime.strptime(event['event_start_date'], '%Y-%m-%d %H:%M:%S') + timedelta(hours=random.randint(0, 3))
+            subevent_end = subevent_start + timedelta(hours=2)
+            subevents.append({
+                "subevent_id": subevent_id,
+                "event_id": event['event_id'],
+                "subevent_type": random.choice(subevent_types),
+                "venue_id": venue_id,
+                "performer_id": performer_id,
+                "subevent_start_date": subevent_start.strftime('%Y-%m-%d %H:%M:%S'),
+                "subevent_end_date": subevent_end.strftime('%Y-%m-%d %H:%M:%S')
+            })
+            subevent_id += 1
+    return subevents
+
+# Generate events with weighted organizers and venues
 def generate_events(num_events, organizer_ids, venue_ids):
     events = []
+    organizer_weights = np.random.dirichlet(np.ones(len(organizer_ids)), size=1)[0]  # Weighted organizer distribution
+    venue_weights = np.random.dirichlet(np.ones(len(venue_ids)), size=1)[0]  # Weighted venue distribution
+
     for event_id in range(1, num_events + 1):
-        organizer_id = random.choice(organizer_ids)
-        venue_id = random.choice(venue_ids)
+        organizer_id = np.random.choice(organizer_ids, p=organizer_weights)  # Weighted organizer selection
+        venue_id = np.random.choice(venue_ids, p=venue_weights)  # Weighted venue selection
         event_name = f"Event{event_id}"
         start_date = generate_purchase_date()
         end_date = start_date + timedelta(days=random.randint(1, 2))
@@ -128,29 +160,6 @@ def generate_events(num_events, organizer_ids, venue_ids):
         })
     return events
 
-# Generate subevents
-def generate_subevents(events, performers, venue_ids):
-    subevents = []
-    subevent_types = ['concert', 'conference', 'seminar', 'workshop', 'tradeshow', 'foundriser', 'expo']
-    subevent_id = 1
-    for event in events:
-        num_subevents = random.randint(1, 5)
-        for _ in range(num_subevents):
-            performer = random.choice(performers)
-            venue_id = random.choice(venue_ids)
-            subevent_start = datetime.strptime(event['event_start_date'], '%Y-%m-%d %H:%M:%S') + timedelta(hours=random.randint(0, 3))
-            subevent_end = subevent_start + timedelta(hours=2)
-            subevents.append({
-                "subevent_id": subevent_id,
-                "event_id": event['event_id'],
-                "subevent_type": random.choice(subevent_types),
-                "venue_id": venue_id,
-                "performer_id": performer['performer_id'],
-                "subevent_start_date": subevent_start.strftime('%Y-%m-%d %H:%M:%S'),
-                "subevent_end_date": subevent_end.strftime('%Y-%m-%d %H:%M:%S')
-            })
-            subevent_id += 1
-    return subevents
 
 # Generate performers
 def generate_performers(num_performers):
@@ -259,16 +268,16 @@ if __name__ == '__main__':
     df_tickets = pd.DataFrame(tickets)
 
     # Export to CSV
-    df_addresses.to_csv('addresses.csv', index=False)
-    df_venues.to_csv('venues.csv', index=False)
-    df_organizers.to_csv('organizers.csv', index=False)
-    df_customers.to_csv('customers.csv', index=False)
-    df_events.to_csv('events.csv', index=False)
-    df_performers.to_csv('performers.csv', index=False)
-    df_stages.to_csv('stages.csv', index=False)
-    df_seats.to_csv('seats.csv', index=False)
-    df_subevents.to_csv('subevents.csv', index=False)
-    df_purchases.to_csv('purchases.csv', index=False)
-    df_tickets.to_csv('tickets.csv', index=False)
+    df_addresses.to_csv('data/addresses.csv', index=False)
+    df_venues.to_csv('data/venues.csv', index=False)
+    df_organizers.to_csv('data/organizers.csv', index=False)
+    df_customers.to_csv('data/customers.csv', index=False)
+    df_events.to_csv('data/events.csv', index=False)
+    df_performers.to_csv('data/performers.csv', index=False)
+    df_stages.to_csv('data/stages.csv', index=False)
+    df_seats.to_csv('data/seats.csv', index=False)
+    df_subevents.to_csv('data/subevents.csv', index=False)
+    df_purchases.to_csv('data/purchases.csv', index=False)
+    df_tickets.to_csv('data/tickets.csv', index=False)
 
     print("Data generation completed and saved to CSV files.")
