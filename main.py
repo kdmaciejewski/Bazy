@@ -23,15 +23,17 @@ holidays = [
 # Helper function to generate customer birth dates
 def generate_birth_date():
     current_year = datetime.now().year
+
+
     age = np.random.choice(
-        range(18, 80),
+        range(18, 81),
         p=[
-            0.2 / 3 if 18 <= x < 21 else  # Distribute 0.2 across ages 18, 19, 20
-            0.5 / 15 if 21 <= x <= 35 else  # Distribute 0.5 across ages 21-35
-            0.3 / 25 if 36 <= x < 60 else  # Distribute 0.3 across ages 36-59
-            0.1 / 20 if 60 <= x < 80 else  # Distribute 0.1 across ages 60-79
+            0.2/3 if 18 <= x < 21 else  # Distribute 0.2 across ages 18, 19, 20
+            0.5/14 if 21 <= x < 35 else  # Distribute 0.5 across ages 21-35
+            0.2/25 if 35 <= x < 60 else  # Distribute 0.3 across ages 36-59
+            0.1/21 if 60 <= x <= 80 else  # Distribute 0.1 across ages 60-79
             0
-            for x in range(18, 80)
+            for x in range(18, 81)
         ]
     )
     birth_year = current_year - age
@@ -45,12 +47,12 @@ def generate_purchase_date():
         date = datetime(2024, random.randint(1, 12), random.randint(1, 28))
 
     if date.weekday() < 5:  # Weekday
-        hour = np.random.choice(range(17, 21), p=[0.5, 0.3, 0.2])
+        hour = np.random.choice(range(18, 21), p=[0.5, 0.3, 0.2])
     else:  # Weekend
         hour = np.random.choice(range(10, 18))
 
     minute = random.randint(0, 59)
-    return date + timedelta(hours=hour, minutes=minute)
+    return date + timedelta(hours=int(hour), minutes=int(minute))
 
 # Generate more venues in more populated states
 def generate_venues(num_venues):
@@ -224,47 +226,49 @@ def generate_purchases_and_tickets(customers, events):
             purchase_id += 1
     return purchases, tickets
 
-# Number of data entries to generate
-NUM_VENUES = 10
-NUM_ORGANIZERS = 5
-NUM_CUSTOMERS = 50
-NUM_EVENTS = 20
-NUM_PERFORMERS = 15
 
-# Generate data
-venues, addresses = generate_venues(NUM_VENUES)
-organizers = generate_organizers(NUM_ORGANIZERS)
-customers = generate_customers(NUM_CUSTOMERS)
-events = generate_events(NUM_EVENTS, [org["organizer_id"] for org in organizers], [venue["venue_id"] for venue in venues])
-performers = generate_performers(NUM_PERFORMERS)
-stages, seats = generate_stages_and_seats(venues)
-subevents = generate_subevents(events, performers, [venue["venue_id"] for venue in venues])
-purchases, tickets = generate_purchases_and_tickets(customers, events)
+if __name__ == '__main__':
+    # Number of data entries to generate
+    NUM_VENUES = 10
+    NUM_ORGANIZERS = 5
+    NUM_CUSTOMERS = 50
+    NUM_EVENTS = 20
+    NUM_PERFORMERS = 15
 
-# Convert data to DataFrames for export to CSV
-df_addresses = pd.DataFrame(addresses)
-df_venues = pd.DataFrame(venues)
-df_organizers = pd.DataFrame(organizers)
-df_customers = pd.DataFrame(customers)
-df_events = pd.DataFrame(events)
-df_performers = pd.DataFrame(performers)
-df_stages = pd.DataFrame(stages)
-df_seats = pd.DataFrame(seats)
-df_subevents = pd.DataFrame(subevents)
-df_purchases = pd.DataFrame(purchases)
-df_tickets = pd.DataFrame(tickets)
+    # Generate data
+    venues, addresses = generate_venues(NUM_VENUES)
+    organizers = generate_organizers(NUM_ORGANIZERS)
+    customers = generate_customers(NUM_CUSTOMERS)
+    events = generate_events(NUM_EVENTS, [org["organizer_id"] for org in organizers], [venue["venue_id"] for venue in venues])
+    performers = generate_performers(NUM_PERFORMERS)
+    stages, seats = generate_stages_and_seats(venues)
+    subevents = generate_subevents(events, performers, [venue["venue_id"] for venue in venues])
+    purchases, tickets = generate_purchases_and_tickets(customers, events)
 
-# Export to CSV
-df_addresses.to_csv('addresses.csv', index=False)
-df_venues.to_csv('venues.csv', index=False)
-df_organizers.to_csv('organizers.csv', index=False)
-df_customers.to_csv('customers.csv', index=False)
-df_events.to_csv('events.csv', index=False)
-df_performers.to_csv('performers.csv', index=False)
-df_stages.to_csv('stages.csv', index=False)
-df_seats.to_csv('seats.csv', index=False)
-df_subevents.to_csv('subevents.csv', index=False)
-df_purchases.to_csv('purchases.csv', index=False)
-df_tickets.to_csv('tickets.csv', index=False)
+    # Convert data to DataFrames for export to CSV
+    df_addresses = pd.DataFrame(addresses)
+    df_venues = pd.DataFrame(venues)
+    df_organizers = pd.DataFrame(organizers)
+    df_customers = pd.DataFrame(customers)
+    df_events = pd.DataFrame(events)
+    df_performers = pd.DataFrame(performers)
+    df_stages = pd.DataFrame(stages)
+    df_seats = pd.DataFrame(seats)
+    df_subevents = pd.DataFrame(subevents)
+    df_purchases = pd.DataFrame(purchases)
+    df_tickets = pd.DataFrame(tickets)
 
-print("Data generation completed and saved to CSV files.")
+    # Export to CSV
+    df_addresses.to_csv('addresses.csv', index=False)
+    df_venues.to_csv('venues.csv', index=False)
+    df_organizers.to_csv('organizers.csv', index=False)
+    df_customers.to_csv('customers.csv', index=False)
+    df_events.to_csv('events.csv', index=False)
+    df_performers.to_csv('performers.csv', index=False)
+    df_stages.to_csv('stages.csv', index=False)
+    df_seats.to_csv('seats.csv', index=False)
+    df_subevents.to_csv('subevents.csv', index=False)
+    df_purchases.to_csv('purchases.csv', index=False)
+    df_tickets.to_csv('tickets.csv', index=False)
+
+    print("Data generation completed and saved to CSV files.")
