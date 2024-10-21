@@ -238,11 +238,11 @@ def generate_purchases_and_tickets(customers, events):
 
 if __name__ == '__main__':
     # Number of data entries to generate
-    NUM_VENUES = 10
-    NUM_ORGANIZERS = 5
-    NUM_CUSTOMERS = 50
-    NUM_EVENTS = 20
-    NUM_PERFORMERS = 15
+    NUM_VENUES = 100000
+    NUM_ORGANIZERS = 10000
+    NUM_CUSTOMERS = 500000
+    NUM_EVENTS = 200000
+    NUM_PERFORMERS = 50000
 
     # Generate data
     venues, addresses = generate_venues(NUM_VENUES)
