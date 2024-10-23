@@ -95,7 +95,7 @@ def create_customers(n_of_customers: int, faker: Faker):
     def create_customer(faker):
         name, surname = faker.first_name(), faker.last_name()
         #email = faker.email()
-        email = name + surname + random.choice([str(random.randint(1, 10000)), ""]) + "@" + faker.sentence(nb_words=1) + random.choice(["net", "com", "us"])
+        email = name + surname + random.choice([str(random.randint(1, 10000)), ""]) + "@" + faker.sentence(nb_words=1).lower() + random.choice(["net", "com", "us"])
         phone_nr = faker.phone_number()
         birth_date = generate_birth_date()
         return Customer(name, surname, email, phone_nr, birth_date)
@@ -114,8 +114,22 @@ def create_customers(n_of_customers: int, faker: Faker):
 def create_venues():
     pass
 
-def create_organizers():
-    pass
+def create_organizers(n_of_organizers: int, faker: Faker):
+    
+    def create_organizer(faker: Faker):
+        name = faker.name()
+        email = name.split(" ")[0] + name.split(" ")[1] + str(random.choice(["_biz", "_org", "_private", "_buisness"])) + "@" + random.choice(["contact.", ""]) + faker.sentence(nb_words=1).lower() + random.choice(["net", "com", "us"])    
+        return Organizer(name, email)
+    
+    count = 0
+    organizers = []
+    
+    while(count != n_of_organizers):
+        o = create_organizer(faker)
+        organizers.append(o)
+        count += 1
+    
+    return organizers
 
 def create_tickets():
     pass
@@ -138,7 +152,6 @@ def create_address():
 
 
 
-
 if __name__ == '__main__':
     
     N_ORGANIZERS = 8000
@@ -151,16 +164,20 @@ if __name__ == '__main__':
     Faker.seed(2137)
     
   
-    print("\n________________________/n")
+    print("\n________________________\n")
     pp = create_performers(10, fake)
     for p in pp:
         print(f"id: {p.performer_id}, Name: {p.performer_name}, Type: {p.performer_type}, Popularity: {p.popularity}")
         
     
-    print("\n________________________/n")
+    print("\n________________________\n")
     cc = create_customers(10, fake)
     for c in cc:
         print(f"id: {c.customer_id}, Name: {c.customer_name}, surname: {c.customer_surname}, email: {c.customer_email}, phone number: {c.customer_phone_number}, birth date: {c.customer_birth_date}")
         
-        
+    
+    print("\n________________________\n")
+    oo = create_organizers(10, fake)
+    for o in oo:
+        print(f"id: {o.organizer_id}, Name: {o.organizer_name}, email: {o.organizer_email}")
   
