@@ -82,7 +82,7 @@ class Subevent:
         self.subevent_end_date = subevent_end_date
    
       
-# POPULARITY ADDED        
+# POPULARITY ADDED AS A SUBSIDIARY ATR - DO NOT INCLUDE IN DB     
 class Performer:
     id_iter = itertools.count()
     
@@ -94,17 +94,20 @@ class Performer:
         self.popularity = popularity
 
 
+# SIZE ADDED AS A SUBSIDIARY ATR - DO NOT INCLUDE IN DB  
 class Venue:
     id_iter = itertools.count()
     
-    def __init__(self, venue_name: str, venue_type: VenueType ,venue_address_id: int, venue_capacity: int):
+    def __init__(self, venue_name: str, venue_type: VenueType ,venue_address_id: int, venue_capacity: int, venue_size: str):
         self.venue_id = next(self.id_iter)
         self.venue_name = venue_name
         self.venue_type = venue_type
         self.venue_address_id = venue_address_id
         self.venue_capacity = venue_capacity
+        self.venue_size = venue_size
         
         
+# te rozmiary to tak średnio        
 class Address:
     id_iter = itertools.count()
     
@@ -112,13 +115,15 @@ class Address:
         self.address_id = next(self.id_iter)
         self.address_country = self.validate_atr_length(adr_country, 50)
         self.address_city = self.validate_atr_length(adr_city, 58)
-        self.address_street = self.validate_atr_length(adr_street, 60)
-        self.address_postal_code = self.validate_atr_length(adr_pcode, 8)
-        self.adddress_number = self.validate_atr_length(adr_nr, 4)
+        self.address_street = self.validate_atr_length(adr_street, 100)
+        self.address_postal_code = self.validate_atr_length(adr_pcode, 12)
+        self.address_number = self.validate_atr_length(adr_nr, 10)
         
     def validate_atr_length(self, atr: str, max_length: int) -> str:
         if len(atr) > max_length:
             raise ValueError(f"Atr cant be that long")
+        else:
+            return atr
   
         
 class Stage:
