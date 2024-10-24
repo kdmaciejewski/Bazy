@@ -13,7 +13,7 @@ class TicketType(Enum):
 class SubeventType(Enum):
     CONCERT: int = 1
     CONFERENCE: int = 2
-    SEMINARY: int = 3
+    SEMINAR: int = 3
     WORKSHOP: int = 4
     TRADESHOW: int = 5
     FOUNDRISER: int = 6

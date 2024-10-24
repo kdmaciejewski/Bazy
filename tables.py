@@ -12,23 +12,42 @@ class Ticket:
     
     id_iter = itertools.count()
     
-    def __init__(self, purchase_id: int, event_id: int, ticket_type: TicketType, ticket_seat_id: int):
+    def __init__(self, purchase_id: int, event_id: int, ticket_type: TicketType, ticket_seat_id: int, ticket_price:float):
         self.ticket_id = next(self.id_iter)
         self.purchase_id = purchase_id
         self.event_id = event_id
         self.ticket_type = ticket_type
         self.ticket_seat_id = ticket_seat_id
+        self.ticket_price = ticket_price
+        
+    def to_dict(self):
+        return {
+            'ticket_id': self.ticket_id,
+            'purchase_id': self.purchase_id,
+            'event_id': self.event_id,
+            'ticket_type': self.ticket_type.name.lower(),  # Zakładając, że ticket_type jest enumem
+            'ticket_seat_id': self.ticket_seat_id,
+            'ticket_price': self.ticket_price
+        }
 
 
 class Purchase:
     
     id_iter = itertools.count()
     
-    def __init__(self, purchase_id: int, customer_id: int, purchase_date: datetime, purchase_total_price: float):
+    def __init__(self, customer_id: int, purchase_date: datetime, purchase_total_price: float):
         self.purchase_id = next(self.id_iter)
         self.customer_id = customer_id
         self.purchase_date = purchase_date
         self.purchase_total_price = purchase_total_price
+        
+    def to_dict(self):
+        return {
+            'purchase_id': self.purchase_id,
+            'customer_id': self.customer_id,
+            'purchase_date': self.purchase_date.isoformat(),
+            'purchase_total_price': self.purchase_total_price
+        }
         
         
 class Customer:
@@ -41,12 +60,22 @@ class Customer:
         self.customer_email = customer_email
         self.customer_phone_number = customer_phone_number
         self.customer_birth_date = customer_birth_date
+        
+    def to_dict(self):
+        return {
+            'customer_id': self.customer_id,
+            'customer_name': self.customer_name,
+            'customer_surname': self.customer_surname,
+            'customer_email': self.customer_email,
+            'customer_phone_number': self.customer_phone_number,
+            'customer_birth_date': self.customer_birth_date.date()
+        }
 
-
+# N_OF_SUBEVENTS and SIZE ADDED AS A SUBSIDIARY ATR - DO NOT INCLUDE IN DB   
 class Event:
     id_iter = itertools.count()
     
-    def __init__(self, organizer_id: int, event_name: str, event_start_date: datetime, event_end_date: datetime, event_description: str, event_status: EventStatus):
+    def __init__(self, organizer_id: int, event_name: str, event_start_date: datetime, event_end_date: datetime, event_description: str, event_status: EventStatus, n_of_subevents: int, event_size: str ):
         self.event_id = next(self.id_iter)
         self.organizer_id = organizer_id
         self.event_name = event_name
@@ -54,10 +83,26 @@ class Event:
         self.event_end_date = event_end_date
         self.event_description = self.validate_atr_length(event_description, 2000)
         self.event_status = event_status
+        self.event_n_of_subevents = n_of_subevents
+        self.event_size = event_size
            
     def validate_atr_length(self, atr: str, max_length: int) -> str:
         if len(atr) > max_length:
             raise ValueError(f"Atr cant be that long")
+        
+        else:
+            return atr
+        
+    def to_dict(self):
+        return {
+            'event_id': self.event_id,
+            'organizer_id': self.organizer_id,
+            'event_name': self.event_name[:40],
+            'event_start_date': self.event_start_date.isoformat(),
+            'event_end_date': self.event_end_date.isoformat(),
+            'event_description': self.event_description,
+            'event_status': self.event_status.name.lower()  # Zakładając, że event_status jest enumem
+        }
  
         
 class Organizer:
@@ -67,6 +112,13 @@ class Organizer:
         self.organizer_id = next(self.id_iter)
         self.organizer_name = organizer_name
         self.organizer_email = organizer_email
+    
+    def to_dict(self):
+        return {
+            'organizer_id': self.organizer_id,
+            'organizer_name': self.organizer_name[:49],
+            'organizer_email': self.organizer_email
+        }
        
         
 class Subevent:
@@ -80,6 +132,17 @@ class Subevent:
         self.performer_id = performer_id
         self.subevent_start_date = subevent_start_date
         self.subevent_end_date = subevent_end_date
+    
+    def to_dict(self):
+        return {
+            'subevent_id': self.subevent_id,
+            'event_id': self.event_id,
+            'subevent_type': self.subevent_type.name.lower(),  # Zakładając, że subevent_type jest enumem
+            'venue_id': self.venue_id,
+            'performer_id': self.performer_id,
+            'subevent_start_date': self.subevent_start_date.isoformat(),
+            'subevent_end_date': self.subevent_end_date.isoformat()
+        }
    
       
 # POPULARITY ADDED AS A SUBSIDIARY ATR - DO NOT INCLUDE IN DB     
@@ -92,6 +155,14 @@ class Performer:
         self.performer_type = performer_type
         self.is_a_band = is_a_band
         self.popularity = popularity
+    
+    def to_dict(self):
+        return {
+            'performer_id': self.performer_id,
+            'performer_name': self.performer_name[:49],
+            'performer_type': self.performer_type.name.title(),  # Zakładając, że performer_type jest enumem
+            'is_a_band': self.is_a_band
+        }
 
 
 # SIZE ADDED AS A SUBSIDIARY ATR - DO NOT INCLUDE IN DB  
@@ -106,6 +177,14 @@ class Venue:
         self.venue_capacity = venue_capacity
         self.venue_size = venue_size
         
+    def to_dict(self):
+        return {
+            'venue_id': self.venue_id,
+            'venue_name': self.venue_name[:49],
+            'venue_address_id': self.venue_address_id,
+            'venue_capacity': self.venue_capacity,
+            'venue_type': self.venue_type.name.lower(),  # Zakładając, że venue_type jest enumem
+        }
         
 # te rozmiary to tak średnio        
 class Address:
@@ -124,6 +203,16 @@ class Address:
             raise ValueError(f"Atr cant be that long")
         else:
             return atr
+    
+    def to_dict(self):
+        return {
+            'address_id': self.address_id,
+            'address_country': self.address_country[:49],
+            'address_city': self.address_city[:57],
+            'address_street': self.address_street[:59],
+            'address_postal_code': self.address_postal_code[:8],
+            'address_number': str(self.address_number)[:4]
+        }
   
         
 class Stage:
@@ -137,6 +226,15 @@ class Stage:
     def validate_atr_length(self, atr: str, max_length: int) -> str:
         if len(atr) > max_length:
             raise ValueError(f"Atr cant be that long")
+        else:
+            return atr
+    
+    def to_dict(self):
+        return {
+            'stage_id': self.stage_id,
+            'stage_name': self.stage_name,
+            'venue_id': self.venue_id
+        }
         
 
 class Seat:
@@ -148,3 +246,12 @@ class Seat:
         self.seat_name = seat_name
         self.seat_status = seat_status
         self.seat_sector = seat_sector
+    
+    def to_dict(self):
+        return {
+            'seat_id': self.seat_id,
+            'stage_id': self.stage_id,
+            'seat_name': self.seat_name[:5],
+            'seat_status': self.seat_status.name.lower(),  # Zakładając, że seat_status jest enumem
+            'sector': self.seat_sector
+        }

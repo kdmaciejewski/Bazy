@@ -24,3 +24,6 @@ env/
 
 # Ignore environment variables file
 .env
+
+data_sample/
+data_full/
