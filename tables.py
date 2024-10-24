@@ -25,7 +25,7 @@ class Ticket:
             'ticket_id': self.ticket_id,
             'purchase_id': self.purchase_id,
             'event_id': self.event_id,
-            'ticket_type': self.ticket_type.name.lower(),  # Zakładając, że ticket_type jest enumem
+            'ticket_type': self.ticket_type.name.lower(),
             'ticket_seat_id': self.ticket_seat_id,
             'ticket_price': self.ticket_price
         }
@@ -101,7 +101,7 @@ class Event:
             'event_start_date': self.event_start_date.isoformat(),
             'event_end_date': self.event_end_date.isoformat(),
             'event_description': self.event_description,
-            'event_status': self.event_status.name.lower()  # Zakładając, że event_status jest enumem
+            'event_status': self.event_status.name.lower() 
         }
  
         
@@ -137,7 +137,7 @@ class Subevent:
         return {
             'subevent_id': self.subevent_id,
             'event_id': self.event_id,
-            'subevent_type': self.subevent_type.name.lower(),  # Zakładając, że subevent_type jest enumem
+            'subevent_type': self.subevent_type.name.lower(), 
             'venue_id': self.venue_id,
             'performer_id': self.performer_id,
             'subevent_start_date': self.subevent_start_date.isoformat(),
@@ -160,7 +160,7 @@ class Performer:
         return {
             'performer_id': self.performer_id,
             'performer_name': self.performer_name[:49],
-            'performer_type': self.performer_type.name.title(),  # Zakładając, że performer_type jest enumem
+            'performer_type': self.performer_type.name.title(), 
             'is_a_band': self.is_a_band
         }
 
@@ -183,7 +183,7 @@ class Venue:
             'venue_name': self.venue_name[:49],
             'venue_address_id': self.venue_address_id,
             'venue_capacity': self.venue_capacity,
-            'venue_type': self.venue_type.name.lower(),  # Zakładając, że venue_type jest enumem
+            'venue_type': self.venue_type.name.lower(),
         }
         
 # te rozmiary to tak średnio        
@@ -252,6 +252,6 @@ class Seat:
             'seat_id': self.seat_id,
             'stage_id': self.stage_id,
             'seat_name': self.seat_name[:5],
-            'seat_status': self.seat_status.name.lower(),  # Zakładając, że seat_status jest enumem
+            'seat_status': self.seat_status.name.lower(),
             'sector': self.seat_sector
         }

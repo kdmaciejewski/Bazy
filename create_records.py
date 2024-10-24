@@ -8,6 +8,7 @@ import numpy as np
 from faker import Faker
 from faker.providers import DynamicProvider
 import pandas as pd
+import os
 
 # Constants for US states and more populated states
 more_populated_states = ["California", "Texas", "Florida", "New York", "Illinois"]
@@ -355,7 +356,7 @@ def create_tickets(n_of_tickets, purchases, events, seats):
     def create_ticket(purchase, event, seat):
         
         ticket_type = random.choices([item for item in TicketType], weights=[0.8, 0.17, 0.03], k=1)[0]
-        ticket_price = random.choice([float(10)*0.5*p for p in range(1, 50) if float(10)*0.5*p < purchase.purchase_total_price])
+        ticket_price = random.choice([float(5)*0.5*p for p in range(1, 60) if float(10)*0.5*p < purchase.purchase_total_price])
     
         return Ticket(purchase_id=purchase.purchase_id, event_id=event.event_id, ticket_type=ticket_type, ticket_seat_id=seat.seat_id, ticket_price=ticket_price)
     
@@ -377,7 +378,7 @@ def create_tickets(n_of_tickets, purchases, events, seats):
 def create_purchases(n_of_purchases, customers):
     
     def create_purchase(customer):
-        price = random.randint(1, 5) * random.choice([float(10)*0.5*p for p in range(1, 50)])
+        price = random.randint(1, 5) * random.choice([float(10)*0.5*p for p in range(5, 50)])
         p_date = generate_purchase_date()
         return Purchase(customer_id=customer.customer_id, purchase_date=p_date, purchase_total_price=price)
     
@@ -511,33 +512,55 @@ def sanity_check(n=15):
   
 def main():
     
-    N_ORGANIZERS = 8000
-    N_PERFORMERS = 15000
+    dir_name = 'data_full2'
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+    
+    
+    # reasonable imo
+    N_ORGANIZERS = 800
+    N_PERFORMERS = 17000
     N_CUSTOMERS = 800000
     
-    N_VENUES = 21000
+    #n_venues ~500 miast z średnio 4 obiektami + 100
+    N_VENUES = 2100
     
-    N_EVENTS = 250000
+    #n_venues * 40 (średnia liczba wydarzeń na obiekcie w ciągu roku)
+    N_EVENTS = 85000
     
+    #tak o
     N_PURCHASES = 950000
     N_TICKETS = 1000000
     
+    #500 miast o swoich kodach pocztowych
     fake = Faker('en_US')
     Faker.seed(2137)
-    get_n_fake_cities(4000, fake)
+    get_n_fake_cities(500, fake)
     
-
+    print("Generating records:\n")
     pp = create_performers(N_PERFORMERS, fake)
+    print("Generating performers complete:\n")
     cc = create_customers(N_CUSTOMERS, fake)
+    print("Generating customers complete:\n")
     oo = create_organizers(N_ORGANIZERS, fake)  
+    print("Generating organizers complete:\n")
     vv, aa = create_venues_and_addresses(N_VENUES, fake)
+    print("Generating venues and addresses complete:\n")
     ss = create_stages(vv)
+    print("Generating stages complete:\n")
     sts = create_seats(ss)
+    print("Generating seats complete:\n")
     ee = create_events(N_EVENTS, fake, oo)
+    print("Generating events complete:\n")
     ses = create_subevents(ee, vv, pp)
+    print("Generating subevents complete:\n")
     prs = create_purchases(N_PURCHASES, cc)
+    print("Generating purchases complete:\n")
     ts = create_tickets(N_TICKETS, prs, ee, sts)
+    print("Generating tickets complete:\n")
 
+
+    print("\nTransforming do dicts:")
     PERFORMERS = [p.to_dict() for p in pp]
     CUSTOMERS = [c.to_dict() for c in cc]
     ORGANIZERS = [o.to_dict() for o in oo]
@@ -550,7 +573,8 @@ def main():
     PURCHASES = [pr.to_dict() for pr in prs]
     TICKETS = [t.to_dict() for t in ts]
     
-        # Convert data to DataFrames for export to CSV
+    # Convert data to DataFrames for export to CSV
+    print("\nConverting to DFs:")
     df_addresses = pd.DataFrame(ADDRESSES)
     df_venues = pd.DataFrame(VENUES)
     df_organizers = pd.DataFrame(ORGANIZERS)
@@ -564,25 +588,27 @@ def main():
     df_tickets = pd.DataFrame(TICKETS)
     
     # Export to CSV
-    df_addresses.to_csv('data_full/addresses.csv', index=False)
-    df_venues.to_csv('data_full/venues.csv', index=False)
-    df_organizers.to_csv('data_full/organizers.csv', index=False)
-    df_customers.to_csv('data_full/customers.csv', index=False)
-    df_events.to_csv('data_full/events.csv', index=False)
-    df_performers.to_csv('data_full/performers.csv', index=False)
-    df_stages.to_csv('data_full/stages.csv', index=False)
-    df_seats.to_csv('data_full/seats.csv', index=False)
-    df_subevents.to_csv('data_full/subevents.csv', index=False)
-    df_purchases.to_csv('data_full/purchases.csv', index=False)
-    df_tickets.to_csv('data_full/tickets.csv', index=False)
+    print("\nExporting to csv:")
+    
+    
+    df_addresses.to_csv(f'{dir_name}/addresses.csv', index=False)
+    df_venues.to_csv(f'{dir_name}/venues.csv', index=False)
+    df_organizers.to_csv(f'{dir_name}/organizers.csv', index=False)
+    df_customers.to_csv(f'{dir_name}/customers.csv', index=False)
+    df_events.to_csv(f'{dir_name}/events.csv', index=False)
+    df_performers.to_csv(f'{dir_name}/performers.csv', index=False)
+    df_stages.to_csv(f'{dir_name}/stages.csv', index=False)
+    df_seats.to_csv(f'{dir_name}/seats.csv', index=False)
+    df_subevents.to_csv(f'{dir_name}/subevents.csv', index=False)
+    df_purchases.to_csv(f'{dir_name}/purchases.csv', index=False)
+    df_tickets.to_csv(f'{dir_name}/tickets.csv', index=False)
 
     print("Data generation completed and saved to CSV files.")
-    
     
 
 
 if __name__ == '__main__':
     
     main()
-    #sanity_check(15)
+    #sanity_check(50)
     
