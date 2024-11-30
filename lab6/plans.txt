@@ -1,0 +1,427 @@
+Zebrane plany zapytañ:--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Transakcja:
+Aggregate  (cost=40688.75..40688.76 rows=1 width=8) (actual time=314.313..315.717 rows=1 loops=1)
+  ->  Nested Loop  (cost=38012.61..40674.67 rows=5634 width=4) (actual time=308.192..315.506 rows=1895 loops=1)
+        ->  HashAggregate  (cost=38012.18..38068.52 rows=5634 width=8) (actual time=308.145..309.996 rows=1895 loops=1)
+              Group Key: p.customer_id
+              Batches: 1  Memory Usage: 337kB
+              ->  Gather  (cost=25357.66..37998.10 rows=5634 width=8) (actual time=202.940..308.038 rows=3270 loops=1)
+                    Workers Planned: 2
+                    Workers Launched: 2
+                    ->  Parallel Hash Semi Join  (cost=24357.66..36434.70 rows=2348 width=8) (actual time=122.048..225.288 rows=1090 loops=3)
+                          Hash Cond: (p.customer_id = t.purchase_id)
+                          ->  Parallel Seq Scan on purchase p  (cost=0.00..11011.92 rows=395815 width=4) (actual time=0.678..55.909 rows=316667 loops=3)
+                                Filter: (purchase_total_price > '15'::double precision)
+                          ->  Parallel Hash  (cost=24342.96..24342.96 rows=1176 width=4) (actual time=121.154..121.159 rows=1079 loops=3)
+                                Buckets: 4096  Batches: 1  Memory Usage: 224kB
+                                ->  Hash Semi Join  (cost=5416.93..24342.96 rows=1176 width=4) (actual time=25.853..118.627 rows=1079 loops=3)
+                                      Hash Cond: (t.event_id = e.event_id)
+                                      ->  Parallel Seq Scan on ticket t  (cost=0.00..17952.33 rows=365945 width=8) (actual time=0.490..67.721 rows=293793 loops=3)
+                                            Filter: (ticket_price > '10'::double precision)
+                                            Rows Removed by Filter: 39540
+                                      ->  Hash  (cost=5412.77..5412.77 rows=333 width=8) (actual time=25.214..25.217 rows=315 loops=3)
+                                            Buckets: 1024  Batches: 1  Memory Usage: 21kB
+                                            ->  Nested Loop  (cost=2461.33..5412.77 rows=333 width=8) (actual time=16.184..25.111 rows=315 loops=3)
+                                                  ->  HashAggregate  (cost=2460.91..2477.38 rows=1647 width=4) (actual time=16.107..16.388 rows=1559 loops=3)
+                                                        Group Key: s.event_id
+                                                        Batches: 1  Memory Usage: 129kB
+                                                        Worker 0:  Batches: 1  Memory Usage: 129kB
+                                                        Worker 1:  Batches: 1  Memory Usage: 129kB
+                                                        ->  Hash Join  (cost=53.27..2456.79 rows=1647 width=4) (actual time=0.972..15.499 rows=1621 loops=3)
+                                                              Hash Cond: (s.venue_id = v.venue_id)
+                                                              ->  Seq Scan on subevent s  (cost=0.00..2362.54 rows=15582 width=8) (actual time=0.307..12.758 rows=15841 loops=3)
+                                                                    Filter: (subevent_type = 'concert'::subeventtype)
+                                                                    Rows Removed by Filter: 95722
+                                                              ->  Hash  (cost=50.50..50.50 rows=222 width=4) (actual time=0.648..0.649 rows=222 loops=3)
+                                                                    Buckets: 1024  Batches: 1  Memory Usage: 16kB
+                                                                    ->  Seq Scan on venue v  (cost=0.00..50.50 rows=222 width=4) (actual time=0.344..0.609 rows=222 loops=3)
+                                                                          Filter: ((venue_capacity > 100) AND (venue_type = 'stadium'::venuetype))
+                                                                          Rows Removed by Filter: 1878
+                                                  ->  Index Scan using event_pkey on event e  (cost=0.42..1.80 rows=1 width=4) (actual time=0.005..0.005 rows=0 loops=4677)
+                                                        Index Cond: (event_id = s.event_id)
+                                                        Filter: (event_status = 'finished'::eventstatus)
+                                                        Rows Removed by Filter: 1
+        ->  Index Only Scan using customer_pkey on customer c  (cost=0.42..0.46 rows=1 width=4) (actual time=0.003..0.003 rows=1 loops=1895)
+              Index Cond: (customer_id = p.customer_id)
+              Heap Fetches: 0
+Planning Time: 0.744 ms
+Execution Time: 316.060 ms
+--------------------------------------------------------------------------------
+Transakcja:
+Incremental Sort  (cost=28961.13..972259.34 rows=111563 width=111) (actual time=667.207..1412.702 rows=111563 loops=1)
+  Sort Key: performer.performer_name, ((SubPlan 1)), subevent.subevent_start_date
+  Presorted Key: performer.performer_name
+  Full-sort Groups: 3055  Sort Method: quicksort  Average Memory: 29kB  Peak Memory: 29kB
+  Pre-sorted Groups: 17  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
+  ->  Gather Merge  (cost=28902.58..968984.46 rows=111563 width=111) (actual time=666.967..1227.938 rows=111563 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        ->  Sort  (cost=27902.56..28018.77 rows=46485 width=103) (actual time=566.968..595.099 rows=37188 loops=3)
+              Sort Key: performer.performer_name
+              Sort Method: external merge  Disk: 5216kB
+              Worker 0:  Sort Method: external merge  Disk: 4856kB
+              Worker 1:  Sort Method: external merge  Disk: 3296kB
+              ->  Hash Join  (cost=13357.49..21754.43 rows=46485 width=103) (actual time=97.722..262.015 rows=37188 loops=3)
+                    Hash Cond: (subevent.subevent_start_date = subevent_2.subevent_start_date)
+                    ->  Hash Join  (cost=10147.24..17905.02 rows=46485 width=103) (actual time=37.509..180.777 rows=37188 loops=3)
+                          Hash Cond: (venue.venue_id = venue_1.venue_id)
+                          ->  Hash Join  (cost=10080.99..17716.50 rows=46485 width=111) (actual time=36.504..166.617 rows=37188 loops=3)
+                                Hash Cond: (subevent.venue_id = venue.venue_id)
+                                ->  Parallel Hash Join  (cost=10014.74..17527.98 rows=46485 width=77) (actual time=35.970..151.233 rows=37188 loops=3)
+                                      Hash Cond: (event.event_id = event_1.event_id)
+                                      ->  Hash Join  (cost=6648.93..14040.14 rows=46485 width=85) (actual time=29.258..126.749 rows=37188 loops=3)
+                                            Hash Cond: (performer.performer_id = performer_1.performer_id)
+                                            ->  Hash Join  (cost=6138.43..13407.59 rows=46485 width=93) (actual time=25.355..104.296 rows=37188 loops=3)
+                                                  Hash Cond: (subevent.performer_id = performer.performer_id)
+                                                  ->  Parallel Hash Join  (cost=5627.93..12775.03 rows=46485 width=71) (actual time=20.502..81.026 rows=37188 loops=3)
+                                                        Hash Cond: (subevent.event_id = event.event_id)
+                                                        ->  Merge Join  (cost=0.58..7025.66 rows=46485 width=36) (actual time=3.874..44.106 rows=37188 loops=3)
+                                                              Merge Cond: (subevent_1.subevent_id = subevent.subevent_id)
+                                                              ->  Parallel Index Only Scan using subevent_pkey on subevent subevent_1  (cost=0.29..2292.95 rows=46485 width=4) (actual time=0.525..6.224 rows=37188 loops=3)
+                                                                    Heap Fetches: 0
+                                                              ->  Index Scan using subevent_pkey on subevent  (cost=0.29..3872.74 rows=111563 width=36) (actual time=0.046..18.982 rows=101604 loops=3)
+                                                        ->  Parallel Hash  (cost=5087.71..5087.71 rows=43171 width=35) (actual time=16.331..16.331 rows=28333 loops=3)
+                                                              Buckets: 131072  Batches: 1  Memory Usage: 7328kB
+                                                              ->  Parallel Seq Scan on event  (cost=0.00..5087.71 rows=43171 width=35) (actual time=0.042..13.931 rows=42500 loops=2)
+                                                  ->  Hash  (cost=298.00..298.00 rows=17000 width=22) (actual time=4.704..4.705 rows=17000 loops=3)
+                                                        Buckets: 32768  Batches: 1  Memory Usage: 1193kB
+                                                        ->  Seq Scan on performer  (cost=0.00..298.00 rows=17000 width=22) (actual time=0.017..1.690 rows=17000 loops=3)
+                                            ->  Hash  (cost=298.00..298.00 rows=17000 width=4) (actual time=3.760..3.760 rows=17000 loops=3)
+                                                  Buckets: 32768  Batches: 1  Memory Usage: 854kB
+                                                  ->  Seq Scan on performer performer_1  (cost=0.00..298.00 rows=17000 width=4) (actual time=0.400..1.858 rows=17000 loops=3)
+                                      ->  Parallel Hash  (cost=2826.18..2826.18 rows=43171 width=4) (actual time=6.492..6.493 rows=28333 loops=3)
+                                            Buckets: 131072  Batches: 1  Memory Usage: 4352kB
+                                            ->  Parallel Index Only Scan using event_pkey on event event_1  (cost=0.42..2826.18 rows=43171 width=4) (actual time=0.014..7.164 rows=85000 loops=1)
+                                                  Heap Fetches: 0
+                                ->  Hash  (cost=40.00..40.00 rows=2100 width=34) (actual time=0.513..0.513 rows=2100 loops=3)
+                                      Buckets: 4096  Batches: 1  Memory Usage: 173kB
+                                      ->  Seq Scan on venue  (cost=0.00..40.00 rows=2100 width=34) (actual time=0.010..0.211 rows=2100 loops=3)
+                          ->  Hash  (cost=40.00..40.00 rows=2100 width=4) (actual time=0.917..0.918 rows=2100 loops=3)
+                                Buckets: 4096  Batches: 1  Memory Usage: 106kB
+                                ->  Seq Scan on venue venue_1  (cost=0.00..40.00 rows=2100 width=4) (actual time=0.517..0.697 rows=2100 loops=3)
+                    ->  Hash  (cost=2739.30..2739.30 rows=37676 width=8) (actual time=59.872..59.874 rows=59769 loops=3)
+                          Buckets: 65536  Batches: 1  Memory Usage: 2847kB
+                          ->  HashAggregate  (cost=2362.54..2739.30 rows=37676 width=8) (actual time=42.010..50.766 rows=59769 loops=3)
+                                Group Key: subevent_2.subevent_start_date
+                                Batches: 1  Memory Usage: 5649kB
+                                Worker 0:  Batches: 1  Memory Usage: 5649kB
+                                Worker 1:  Batches: 1  Memory Usage: 5649kB
+                                ->  Seq Scan on subevent subevent_2  (cost=0.00..2083.63 rows=111563 width=8) (actual time=0.371..13.787 rows=111563 loops=3)
+        SubPlan 1
+          ->  Limit  (cost=0.29..8.31 rows=1 width=8) (actual time=0.003..0.003 rows=1 loops=111563)
+                ->  Index Scan using subevent_pkey on subevent subevent_3  (cost=0.29..8.31 rows=1 width=8) (actual time=0.003..0.003 rows=1 loops=111563)
+                      Index Cond: (subevent_id = subevent.subevent_id)
+Planning Time: 7.535 ms
+Execution Time: 1433.436 ms
+--------------------------------------------------------------------------------
+Transakcja:
+Limit  (cost=49365.40..49365.44 rows=1 width=91) (actual time=1568.613..1614.301 rows=9 loops=1)
+  ->  GroupAggregate  (cost=49365.40..49365.44 rows=1 width=91) (actual time=1568.612..1614.298 rows=9 loops=1)
+        Group Key: customer.customer_name, customer.customer_surname, customer.customer_email, event.event_id, (count(s.subevent_id))
+        Filter: (count(*) > 1)
+        Rows Removed by Filter: 39
+        ->  Sort  (cost=49365.40..49365.41 rows=1 width=51) (actual time=1568.598..1614.261 rows=58 loops=1)
+              Sort Key: customer.customer_name, customer.customer_surname, customer.customer_email, event.event_id, (count(s.subevent_id))
+              Sort Method: quicksort  Memory: 29kB
+              ->  Nested Loop  (cost=48768.61..49365.39 rows=1 width=51) (actual time=1069.654..1613.960 rows=58 loops=1)
+                    ->  Hash Join  (cost=48768.19..48800.29 rows=337 width=16) (actual time=1069.307..1307.888 rows=90631 loops=1)
+                          Hash Cond: (event.event_id = t.event_id)
+                          ->  GroupAggregate  (cost=9106.26..9119.78 rows=676 width=43) (actual time=104.046..111.510 rows=11211 loops=1)
+                                Group Key: event.event_id, s.performer_id
+                                ->  Sort  (cost=9106.26..9107.95 rows=676 width=39) (actual time=104.037..104.764 rows=11212 loops=1)
+                                      Sort Key: event.event_id, s.performer_id
+                                      Sort Method: quicksort  Memory: 1036kB
+                                      ->  Hash Join  (cost=6697.99..9074.49 rows=676 width=39) (actual time=76.077..100.603 rows=11212 loops=1)
+                                            Hash Cond: (s.event_id = event.event_id)
+                                            ->  Seq Scan on subevent s  (cost=0.00..2083.63 rows=111563 width=12) (actual time=0.014..7.277 rows=111563 loops=1)
+                                            ->  Hash  (cost=6690.14..6690.14 rows=628 width=31) (actual time=76.045..76.088 rows=8544 loops=1)
+                                                  Buckets: 16384 (originally 1024)  Batches: 1 (originally 1)  Memory Usage: 690kB
+                                                  ->  Gather  (cost=1000.00..6690.14 rows=628 width=31) (actual time=0.457..72.966 rows=8544 loops=1)
+                                                        Workers Planned: 2
+                                                        Workers Launched: 2
+                                                        ->  Parallel Seq Scan on event  (cost=0.00..5627.34 rows=262 width=31) (actual time=0.025..12.738 rows=2848 loops=3)
+                                                              Filter: ((event_status = 'finished'::eventstatus) AND (EXTRACT(month FROM event_start_date) = ANY ('{5,6,7,8,9,10}'::numeric[])))
+                                                              Rows Removed by Filter: 25485
+                          ->  Hash  (cost=39161.95..39161.95 rows=39998 width=8) (actual time=959.905..1005.517 rows=691024 loops=1)
+                                Buckets: 262144 (originally 65536)  Batches: 8 (originally 1)  Memory Usage: 6145kB
+                                ->  Gather  (cost=17157.73..39161.95 rows=39998 width=8) (actual time=522.726..801.600 rows=691024 loops=1)
+                                      Workers Planned: 2
+                                      Workers Launched: 2
+                                      ->  Parallel Hash Join  (cost=16157.73..34162.15 rows=16666 width=8) (actual time=467.426..699.745 rows=230341 loops=3)
+                                            Hash Cond: (t.purchase_id = purchase.purchase_id)
+                                            ->  Parallel Seq Scan on ticket t  (cost=0.00..16910.67 rows=416667 width=8) (actual time=0.615..54.889 rows=333333 loops=3)
+                                            ->  Parallel Hash  (cost=15959.83..15959.83 rows=15832 width=8) (actual time=301.311..301.311 rows=218886 loops=3)
+                                                  Buckets: 262144 (originally 65536)  Batches: 8 (originally 1)  Memory Usage: 5344kB
+                                                  ->  Parallel Seq Scan on purchase  (cost=0.00..15959.83 rows=15832 width=8) (actual time=0.439..179.825 rows=218886 loops=3)
+                                                        Filter: ((purchase_total_price > '10.009'::double precision) AND (EXTRACT(month FROM purchase_date) = ANY ('{1,2,5,6,7,9,10,12}'::numeric[])))
+                                                        Rows Removed by Filter: 97781
+                    ->  Index Scan using customer_pkey on customer  (cost=0.42..1.68 rows=1 width=43) (actual time=0.003..0.003 rows=0 loops=90631)
+                          Index Cond: (customer_id = purchase.customer_id)
+                          Filter: ((customer_name)::text ~ '^Ab'::text)
+                          Rows Removed by Filter: 1
+Planning Time: 0.802 ms
+Execution Time: 1615.604 ms
+--------------------------------------------------------------------------------
+Transakcja:
+Limit  (cost=48300.72..48359.06 rows=500 width=75) (actual time=758.799..773.462 rows=500 loops=1)
+  ->  Gather Merge  (cost=48300.72..48443.06 rows=1220 width=75) (actual time=758.797..773.406 rows=500 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        ->  Sort  (cost=47300.69..47302.22 rows=610 width=75) (actual time=668.739..668.778 rows=381 loops=3)
+              Sort Key: t.ticket_price DESC
+              Sort Method: top-N heapsort  Memory: 138kB
+              Worker 0:  Sort Method: top-N heapsort  Memory: 135kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 138kB
+              ->  Nested Loop  (cost=22083.33..47272.47 rows=610 width=75) (actual time=170.211..659.951 rows=8037 loops=3)
+                    ->  Parallel Hash Join  (cost=22082.91..33701.74 rows=26912 width=54) (actual time=169.981..416.319 rows=21502 loops=3)
+                          Hash Cond: (p.purchase_id = t.purchase_id)
+                          ->  Parallel Seq Scan on purchase p  (cost=0.00..10022.33 rows=395833 width=8) (actual time=0.763..72.362 rows=316667 loops=3)
+                          ->  Parallel Hash  (cost=21746.51..21746.51 rows=26912 width=54) (actual time=168.911..168.916 rows=21502 loops=3)
+                                Buckets: 65536  Batches: 1  Memory Usage: 6368kB
+                                ->  Parallel Hash Join  (cost=2392.18..21746.51 rows=26912 width=54) (actual time=14.843..156.997 rows=21502 loops=3)
+                                      Hash Cond: (t.ticket_seat_id = se.seat_id)
+                                      ->  Parallel Seq Scan on ticket t  (cost=0.00..17952.33 rows=331653 width=16) (actual time=0.490..81.924 rows=263136 loops=3)
+                                            Filter: (ticket_price < '100'::double precision)
+                                            Rows Removed by Filter: 70198
+                                      ->  Parallel Hash  (cost=2313.36..2313.36 rows=6306 width=46) (actual time=14.296..14.299 rows=3580 loops=3)
+                                            Buckets: 16384  Batches: 1  Memory Usage: 1024kB
+                                            ->  Hash Join  (cost=157.66..2313.36 rows=6306 width=46) (actual time=3.540..37.260 rows=10741 loops=1)
+                                                  Hash Cond: (se.stage_id = st.stage_id)
+                                                  ->  Parallel Seq Scan on seat se  (cost=0.00..1801.19 rows=77719 width=12) (actual time=0.009..12.586 rows=132123 loops=1)
+                                                  ->  Hash  (cost=155.03..155.03 rows=210 width=42) (actual time=2.872..2.877 rows=206 loops=1)
+                                                        Buckets: 1024  Batches: 1  Memory Usage: 24kB
+                                                        ->  Hash Join  (cost=103.35..155.03 rows=210 width=42) (actual time=1.985..2.797 rows=206 loops=1)
+                                                              Hash Cond: (st.venue_id = v.venue_id)
+                                                              ->  Seq Scan on stage st  (cost=0.00..39.88 rows=2588 width=8) (actual time=0.081..0.505 rows=2588 loops=1)
+                                                              ->  Hash  (cost=101.22..101.22 rows=170 width=42) (actual time=1.876..1.879 rows=173 loops=1)
+                                                                    Buckets: 1024  Batches: 1  Memory Usage: 21kB
+                                                                    ->  Hash Join  (cost=53.90..101.22 rows=170 width=42) (actual time=1.418..1.802 rows=173 loops=1)
+                                                                          Hash Cond: (v.venue_address_id = a.address_id)
+                                                                          ->  Seq Scan on venue v  (cost=0.00..45.25 rows=790 width=34) (actual time=0.016..0.282 rows=788 loops=1)
+                                                                                Filter: (venue_capacity > 6000)
+                                                                                Rows Removed by Filter: 1312
+                                                                          ->  Hash  (cost=48.25..48.25 rows=452 width=16) (actual time=1.381..1.382 rows=453 loops=1)
+                                                                                Buckets: 1024  Batches: 1  Memory Usage: 30kB
+                                                                                ->  Seq Scan on address a  (cost=0.00..48.25 rows=452 width=16) (actual time=0.034..1.263 rows=453 loops=1)
+                                                                                      Filter: ((address_city)::text ~ '^[A-F]'::text)
+                                                                                      Rows Removed by Filter: 1647
+                    ->  Index Scan using customer_pkey on customer c  (cost=0.42..0.50 rows=1 width=29) (actual time=0.010..0.010 rows=0 loops=64507)
+                          Index Cond: (customer_id = p.customer_id)
+                          Filter: (((customer_name)::text ~ '^[A-O]'::text) AND (EXTRACT(month FROM customer_birth_date) = ANY ('{1,2,3,4,5,6}'::numeric[])))
+                          Rows Removed by Filter: 1
+Planning Time: 2.600 ms
+Execution Time: 773.702 ms
+--------------------------------------------------------------------------------
+Transakcja:
+Aggregate  (cost=40688.75..40688.76 rows=1 width=8) (actual time=435.710..438.769 rows=1 loops=1)
+  ->  Nested Loop  (cost=38012.61..40674.67 rows=5634 width=4) (actual time=428.461..438.530 rows=1895 loops=1)
+        ->  HashAggregate  (cost=38012.18..38068.52 rows=5634 width=8) (actual time=428.413..432.076 rows=1895 loops=1)
+              Group Key: p.customer_id
+              Batches: 1  Memory Usage: 337kB
+              ->  Gather  (cost=25357.66..37998.10 rows=5634 width=8) (actual time=275.472..429.185 rows=3270 loops=1)
+                    Workers Planned: 2
+                    Workers Launched: 2
+                    ->  Parallel Hash Semi Join  (cost=24357.66..36434.70 rows=2348 width=8) (actual time=196.286..346.483 rows=1090 loops=3)
+                          Hash Cond: (p.customer_id = t.purchase_id)
+                          ->  Parallel Seq Scan on purchase p  (cost=0.00..11011.92 rows=395815 width=4) (actual time=0.756..82.057 rows=316667 loops=3)
+                                Filter: (purchase_total_price > '15'::double precision)
+                          ->  Parallel Hash  (cost=24342.96..24342.96 rows=1176 width=4) (actual time=195.263..195.268 rows=1079 loops=3)
+                                Buckets: 4096  Batches: 1  Memory Usage: 192kB
+                                ->  Hash Semi Join  (cost=5416.93..24342.96 rows=1176 width=4) (actual time=41.772..194.215 rows=1079 loops=3)
+                                      Hash Cond: (t.event_id = e.event_id)
+                                      ->  Parallel Seq Scan on ticket t  (cost=0.00..17952.33 rows=365945 width=8) (actual time=0.572..107.556 rows=293793 loops=3)
+                                            Filter: (ticket_price > '10'::double precision)
+                                            Rows Removed by Filter: 39540
+                                      ->  Hash  (cost=5412.77..5412.77 rows=333 width=8) (actual time=40.945..40.949 rows=315 loops=3)
+                                            Buckets: 1024  Batches: 1  Memory Usage: 21kB
+                                            ->  Nested Loop  (cost=2461.33..5412.77 rows=333 width=8) (actual time=25.516..40.757 rows=315 loops=3)
+                                                  ->  HashAggregate  (cost=2460.91..2477.38 rows=1647 width=4) (actual time=25.428..25.944 rows=1559 loops=3)
+                                                        Group Key: s.event_id
+                                                        Batches: 1  Memory Usage: 129kB
+                                                        Worker 0:  Batches: 1  Memory Usage: 129kB
+                                                        Worker 1:  Batches: 1  Memory Usage: 129kB
+                                                        ->  Hash Join  (cost=53.27..2456.79 rows=1647 width=4) (actual time=1.243..24.345 rows=1621 loops=3)
+                                                              Hash Cond: (s.venue_id = v.venue_id)
+                                                              ->  Seq Scan on subevent s  (cost=0.00..2362.54 rows=15582 width=8) (actual time=0.404..19.796 rows=15841 loops=3)
+                                                                    Filter: (subevent_type = 'concert'::subeventtype)
+                                                                    Rows Removed by Filter: 95722
+                                                              ->  Hash  (cost=50.50..50.50 rows=222 width=4) (actual time=0.806..0.807 rows=222 loops=3)
+                                                                    Buckets: 1024  Batches: 1  Memory Usage: 16kB
+                                                                    ->  Seq Scan on venue v  (cost=0.00..50.50 rows=222 width=4) (actual time=0.313..0.739 rows=222 loops=3)
+                                                                          Filter: ((venue_capacity > 100) AND (venue_type = 'stadium'::venuetype))
+                                                                          Rows Removed by Filter: 1878
+                                                  ->  Index Scan using event_pkey on event e  (cost=0.42..1.80 rows=1 width=4) (actual time=0.009..0.009 rows=0 loops=4677)
+                                                        Index Cond: (event_id = s.event_id)
+                                                        Filter: (event_status = 'finished'::eventstatus)
+                                                        Rows Removed by Filter: 1
+        ->  Index Only Scan using customer_pkey on customer c  (cost=0.42..0.46 rows=1 width=4) (actual time=0.003..0.003 rows=1 loops=1895)
+              Index Cond: (customer_id = p.customer_id)
+              Heap Fetches: 0
+Planning Time: 1.357 ms
+Execution Time: 439.359 ms
+--------------------------------------------------------------------------------
+Transakcja:
+Incremental Sort  (cost=28961.13..972259.34 rows=111563 width=111) (actual time=676.073..1227.178 rows=111563 loops=1)
+  Sort Key: performer.performer_name, ((SubPlan 1)), subevent.subevent_start_date
+  Presorted Key: performer.performer_name
+  Full-sort Groups: 3055  Sort Method: quicksort  Average Memory: 29kB  Peak Memory: 29kB
+  Pre-sorted Groups: 17  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
+  ->  Gather Merge  (cost=28902.58..968984.46 rows=111563 width=111) (actual time=675.848..1080.390 rows=111563 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        ->  Sort  (cost=27902.56..28018.77 rows=46485 width=103) (actual time=570.928..589.934 rows=37188 loops=3)
+              Sort Key: performer.performer_name
+              Sort Method: external merge  Disk: 5176kB
+              Worker 0:  Sort Method: external merge  Disk: 4904kB
+              Worker 1:  Sort Method: external merge  Disk: 3296kB
+              ->  Hash Join  (cost=13357.49..21754.43 rows=46485 width=103) (actual time=107.024..275.807 rows=37188 loops=3)
+                    Hash Cond: (subevent.subevent_start_date = subevent_2.subevent_start_date)
+                    ->  Hash Join  (cost=10147.24..17905.02 rows=46485 width=103) (actual time=42.860..189.869 rows=37188 loops=3)
+                          Hash Cond: (venue.venue_id = venue_1.venue_id)
+                          ->  Hash Join  (cost=10080.99..17716.50 rows=46485 width=111) (actual time=41.851..175.058 rows=37188 loops=3)
+                                Hash Cond: (subevent.venue_id = venue.venue_id)
+                                ->  Parallel Hash Join  (cost=10014.74..17527.98 rows=46485 width=77) (actual time=41.176..158.780 rows=37188 loops=3)
+                                      Hash Cond: (event.event_id = event_1.event_id)
+                                      ->  Hash Join  (cost=6648.93..14040.14 rows=46485 width=85) (actual time=32.900..132.208 rows=37188 loops=3)
+                                            Hash Cond: (performer.performer_id = performer_1.performer_id)
+                                            ->  Hash Join  (cost=6138.43..13407.59 rows=46485 width=93) (actual time=28.321..108.508 rows=37188 loops=3)
+                                                  Hash Cond: (subevent.performer_id = performer.performer_id)
+                                                  ->  Parallel Hash Join  (cost=5627.93..12775.03 rows=46485 width=71) (actual time=22.526..83.756 rows=37188 loops=3)
+                                                        Hash Cond: (subevent.event_id = event.event_id)
+                                                        ->  Merge Join  (cost=0.58..7025.66 rows=46485 width=36) (actual time=4.363..44.875 rows=37188 loops=3)
+                                                              Merge Cond: (subevent_1.subevent_id = subevent.subevent_id)
+                                                              ->  Parallel Index Only Scan using subevent_pkey on subevent subevent_1  (cost=0.29..2292.95 rows=46485 width=4) (actual time=0.469..6.258 rows=37188 loops=3)
+                                                                    Heap Fetches: 0
+                                                              ->  Index Scan using subevent_pkey on subevent  (cost=0.29..3872.74 rows=111563 width=36) (actual time=0.039..19.356 rows=101726 loops=3)
+                                                        ->  Parallel Hash  (cost=5087.71..5087.71 rows=43171 width=35) (actual time=17.926..17.926 rows=28333 loops=3)
+                                                              Buckets: 131072  Batches: 1  Memory Usage: 7328kB
+                                                              ->  Parallel Seq Scan on event  (cost=0.00..5087.71 rows=43171 width=35) (actual time=0.282..14.756 rows=42500 loops=2)
+                                                  ->  Hash  (cost=298.00..298.00 rows=17000 width=22) (actual time=5.626..5.626 rows=17000 loops=3)
+                                                        Buckets: 32768  Batches: 1  Memory Usage: 1193kB
+                                                        ->  Seq Scan on performer  (cost=0.00..298.00 rows=17000 width=22) (actual time=0.022..2.165 rows=17000 loops=3)
+                                            ->  Hash  (cost=298.00..298.00 rows=17000 width=4) (actual time=4.431..4.431 rows=17000 loops=3)
+                                                  Buckets: 32768  Batches: 1  Memory Usage: 854kB
+                                                  ->  Seq Scan on performer performer_1  (cost=0.00..298.00 rows=17000 width=4) (actual time=0.398..2.110 rows=17000 loops=3)
+                                      ->  Parallel Hash  (cost=2826.18..2826.18 rows=43171 width=4) (actual time=8.028..8.028 rows=28333 loops=3)
+                                            Buckets: 131072  Batches: 1  Memory Usage: 4352kB
+                                            ->  Parallel Index Only Scan using event_pkey on event event_1  (cost=0.42..2826.18 rows=43171 width=4) (actual time=0.024..8.679 rows=85000 loops=1)
+                                                  Heap Fetches: 0
+                                ->  Hash  (cost=40.00..40.00 rows=2100 width=34) (actual time=0.645..0.646 rows=2100 loops=3)
+                                      Buckets: 4096  Batches: 1  Memory Usage: 173kB
+                                      ->  Seq Scan on venue  (cost=0.00..40.00 rows=2100 width=34) (actual time=0.012..0.260 rows=2100 loops=3)
+                          ->  Hash  (cost=40.00..40.00 rows=2100 width=4) (actual time=0.921..0.922 rows=2100 loops=3)
+                                Buckets: 4096  Batches: 1  Memory Usage: 106kB
+                                ->  Seq Scan on venue venue_1  (cost=0.00..40.00 rows=2100 width=4) (actual time=0.482..0.680 rows=2100 loops=3)
+                    ->  Hash  (cost=2739.30..2739.30 rows=37676 width=8) (actual time=63.812..63.813 rows=59769 loops=3)
+                          Buckets: 65536  Batches: 1  Memory Usage: 2847kB
+                          ->  HashAggregate  (cost=2362.54..2739.30 rows=37676 width=8) (actual time=44.673..53.929 rows=59769 loops=3)
+                                Group Key: subevent_2.subevent_start_date
+                                Batches: 1  Memory Usage: 5649kB
+                                Worker 0:  Batches: 1  Memory Usage: 5649kB
+                                Worker 1:  Batches: 1  Memory Usage: 5649kB
+                                ->  Seq Scan on subevent subevent_2  (cost=0.00..2083.63 rows=111563 width=8) (actual time=0.396..14.426 rows=111563 loops=3)
+        SubPlan 1
+          ->  Limit  (cost=0.29..8.31 rows=1 width=8) (actual time=0.002..0.002 rows=1 loops=111563)
+                ->  Index Scan using subevent_pkey on subevent subevent_3  (cost=0.29..8.31 rows=1 width=8) (actual time=0.002..0.002 rows=1 loops=111563)
+                      Index Cond: (subevent_id = subevent.subevent_id)
+Planning Time: 7.834 ms
+Execution Time: 1244.832 ms
+--------------------------------------------------------------------------------
+Transakcja:
+Limit  (cost=49365.40..49365.44 rows=1 width=91) (actual time=2545.408..2621.889 rows=9 loops=1)
+  ->  GroupAggregate  (cost=49365.40..49365.44 rows=1 width=91) (actual time=2545.407..2621.885 rows=9 loops=1)
+        Group Key: customer.customer_name, customer.customer_surname, customer.customer_email, event.event_id, (count(s.subevent_id))
+        Filter: (count(*) > 1)
+        Rows Removed by Filter: 39
+        ->  Sort  (cost=49365.40..49365.41 rows=1 width=51) (actual time=2545.384..2621.802 rows=58 loops=1)
+              Sort Key: customer.customer_name, customer.customer_surname, customer.customer_email, event.event_id, (count(s.subevent_id))
+              Sort Method: quicksort  Memory: 29kB
+              ->  Nested Loop  (cost=48768.61..49365.39 rows=1 width=51) (actual time=1378.519..2621.218 rows=58 loops=1)
+                    ->  Hash Join  (cost=48768.19..48800.29 rows=337 width=16) (actual time=1378.246..1864.804 rows=90631 loops=1)
+                          Hash Cond: (event.event_id = t.event_id)
+                          ->  GroupAggregate  (cost=9106.26..9119.78 rows=676 width=43) (actual time=181.964..189.802 rows=11211 loops=1)
+                                Group Key: event.event_id, s.performer_id
+                                ->  Sort  (cost=9106.26..9107.95 rows=676 width=39) (actual time=181.956..182.819 rows=11212 loops=1)
+                                      Sort Key: event.event_id, s.performer_id
+                                      Sort Method: quicksort  Memory: 1036kB
+                                      ->  Hash Join  (cost=6697.99..9074.49 rows=676 width=39) (actual time=157.395..178.873 rows=11212 loops=1)
+                                            Hash Cond: (s.event_id = event.event_id)
+                                            ->  Seq Scan on subevent s  (cost=0.00..2083.63 rows=111563 width=12) (actual time=0.015..6.276 rows=111563 loops=1)
+                                            ->  Hash  (cost=6690.14..6690.14 rows=628 width=31) (actual time=157.367..157.450 rows=8544 loops=1)
+                                                  Buckets: 16384 (originally 1024)  Batches: 1 (originally 1)  Memory Usage: 690kB
+                                                  ->  Gather  (cost=1000.00..6690.14 rows=628 width=31) (actual time=0.665..154.617 rows=8544 loops=1)
+                                                        Workers Planned: 2
+                                                        Workers Launched: 2
+                                                        ->  Parallel Seq Scan on event  (cost=0.00..5627.34 rows=262 width=31) (actual time=0.023..11.423 rows=2848 loops=3)
+                                                              Filter: ((event_status = 'finished'::eventstatus) AND (EXTRACT(month FROM event_start_date) = ANY ('{5,6,7,8,9,10}'::numeric[])))
+                                                              Rows Removed by Filter: 25485
+                          ->  Hash  (cost=39161.95..39161.95 rows=39998 width=8) (actual time=1191.329..1267.650 rows=691024 loops=1)
+                                Buckets: 262144 (originally 65536)  Batches: 8 (originally 1)  Memory Usage: 6145kB
+                                ->  Gather  (cost=17157.73..39161.95 rows=39998 width=8) (actual time=739.633..1059.306 rows=691024 loops=1)
+                                      Workers Planned: 2
+                                      Workers Launched: 2
+                                      ->  Parallel Hash Join  (cost=16157.73..34162.15 rows=16666 width=8) (actual time=651.643..892.990 rows=230341 loops=3)
+                                            Hash Cond: (t.purchase_id = purchase.purchase_id)
+                                            ->  Parallel Seq Scan on ticket t  (cost=0.00..16910.67 rows=416667 width=8) (actual time=0.740..72.326 rows=333333 loops=3)
+                                            ->  Parallel Hash  (cost=15959.83..15959.83 rows=15832 width=8) (actual time=451.472..451.473 rows=218886 loops=3)
+                                                  Buckets: 262144 (originally 65536)  Batches: 8 (originally 1)  Memory Usage: 5344kB
+                                                  ->  Parallel Seq Scan on purchase  (cost=0.00..15959.83 rows=15832 width=8) (actual time=0.601..286.858 rows=218886 loops=3)
+                                                        Filter: ((purchase_total_price > '10.009'::double precision) AND (EXTRACT(month FROM purchase_date) = ANY ('{1,2,5,6,7,9,10,12}'::numeric[])))
+                                                        Rows Removed by Filter: 97781
+                    ->  Index Scan using customer_pkey on customer  (cost=0.42..1.68 rows=1 width=43) (actual time=0.008..0.008 rows=0 loops=90631)
+                          Index Cond: (customer_id = purchase.customer_id)
+                          Filter: ((customer_name)::text ~ '^Ab'::text)
+                          Rows Removed by Filter: 1
+Planning Time: 0.766 ms
+Execution Time: 2623.440 ms
+--------------------------------------------------------------------------------
+Transakcja:
+Limit  (cost=48300.72..48359.06 rows=500 width=75) (actual time=880.554..895.208 rows=500 loops=1)
+  ->  Gather Merge  (cost=48300.72..48443.06 rows=1220 width=75) (actual time=880.552..895.145 rows=500 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        ->  Sort  (cost=47300.69..47302.22 rows=610 width=75) (actual time=801.008..801.070 rows=424 loops=3)
+              Sort Key: t.ticket_price DESC
+              Sort Method: top-N heapsort  Memory: 139kB
+              Worker 0:  Sort Method: top-N heapsort  Memory: 134kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 135kB
+              ->  Nested Loop  (cost=22083.33..47272.47 rows=610 width=75) (actual time=243.322..790.858 rows=8037 loops=3)
+                    ->  Parallel Hash Join  (cost=22082.91..33701.74 rows=26912 width=54) (actual time=243.016..518.903 rows=21502 loops=3)
+                          Hash Cond: (p.purchase_id = t.purchase_id)
+                          ->  Parallel Seq Scan on purchase p  (cost=0.00..10022.33 rows=395833 width=8) (actual time=0.953..82.657 rows=316667 loops=3)
+                          ->  Parallel Hash  (cost=21746.51..21746.51 rows=26912 width=54) (actual time=241.685..241.692 rows=21502 loops=3)
+                                Buckets: 65536  Batches: 1  Memory Usage: 6368kB
+                                ->  Parallel Hash Join  (cost=2392.18..21746.51 rows=26912 width=54) (actual time=18.499..223.555 rows=21502 loops=3)
+                                      Hash Cond: (t.ticket_seat_id = se.seat_id)
+                                      ->  Parallel Seq Scan on ticket t  (cost=0.00..17952.33 rows=331653 width=16) (actual time=1.380..120.029 rows=263136 loops=3)
+                                            Filter: (ticket_price < '100'::double precision)
+                                            Rows Removed by Filter: 70198
+                                      ->  Parallel Hash  (cost=2313.36..2313.36 rows=6306 width=46) (actual time=17.006..17.010 rows=3580 loops=3)
+                                            Buckets: 16384  Batches: 1  Memory Usage: 1024kB
+                                            ->  Hash Join  (cost=157.66..2313.36 rows=6306 width=46) (actual time=4.530..44.562 rows=10741 loops=1)
+                                                  Hash Cond: (se.stage_id = st.stage_id)
+                                                  ->  Parallel Seq Scan on seat se  (cost=0.00..1801.19 rows=77719 width=12) (actual time=0.491..16.151 rows=132123 loops=1)
+                                                  ->  Hash  (cost=155.03..155.03 rows=210 width=42) (actual time=3.010..3.015 rows=206 loops=1)
+                                                        Buckets: 1024  Batches: 1  Memory Usage: 24kB
+                                                        ->  Hash Join  (cost=103.35..155.03 rows=210 width=42) (actual time=2.222..2.929 rows=206 loops=1)
+                                                              Hash Cond: (st.venue_id = v.venue_id)
+                                                              ->  Seq Scan on stage st  (cost=0.00..39.88 rows=2588 width=8) (actual time=0.080..0.360 rows=2588 loops=1)
+                                                              ->  Hash  (cost=101.22..101.22 rows=170 width=42) (actual time=2.118..2.121 rows=173 loops=1)
+                                                                    Buckets: 1024  Batches: 1  Memory Usage: 21kB
+                                                                    ->  Hash Join  (cost=53.90..101.22 rows=170 width=42) (actual time=1.636..2.051 rows=173 loops=1)
+                                                                          Hash Cond: (v.venue_address_id = a.address_id)
+                                                                          ->  Seq Scan on venue v  (cost=0.00..45.25 rows=790 width=34) (actual time=0.017..0.313 rows=788 loops=1)
+                                                                                Filter: (venue_capacity > 6000)
+                                                                                Rows Removed by Filter: 1312
+                                                                          ->  Hash  (cost=48.25..48.25 rows=452 width=16) (actual time=1.586..1.587 rows=453 loops=1)
+                                                                                Buckets: 1024  Batches: 1  Memory Usage: 30kB
+                                                                                ->  Seq Scan on address a  (cost=0.00..48.25 rows=452 width=16) (actual time=0.039..1.397 rows=453 loops=1)
+                                                                                      Filter: ((address_city)::text ~ '^[A-F]'::text)
+                                                                                      Rows Removed by Filter: 1647
+                    ->  Index Scan using customer_pkey on customer c  (cost=0.42..0.50 rows=1 width=29) (actual time=0.012..0.012 rows=0 loops=64507)
+                          Index Cond: (customer_id = p.customer_id)
+                          Filter: (((customer_name)::text ~ '^[A-O]'::text) AND (EXTRACT(month FROM customer_birth_date) = ANY ('{1,2,3,4,5,6}'::numeric[])))
+                          Rows Removed by Filter: 1
+Planning Time: 2.485 ms
+Execution Time: 895.630 ms
