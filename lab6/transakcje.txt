@@ -1,0 +1,124 @@
+SELECT COUNT(c.customer_id)
+FROM Customer c
+WHERE c.customer_id IN (
+    SELECT p.customer_id
+    FROM Purchase p
+    WHERE p.purchase_total_price > 15
+    AND p.customer_id IN (
+        SELECT t.purchase_id
+        FROM Ticket t
+        WHERE t.ticket_price > 10
+        AND t.event_id IN (
+            SELECT e.event_id
+            FROM Event e
+            WHERE e.event_status = 'finished'
+            AND e.event_id IN (
+                SELECT s.event_id
+                FROM Subevent s
+                WHERE s.subevent_type = 'concert'
+				AND s.venue_id IN (
+					SELECT v.venue_id
+					FROM Venue v
+					WHERE v.venue_capacity > 100
+					AND v.venue_type = 'stadium'
+				)
+            )
+        )
+    )
+);
+
+SELECT
+	p.performer_name,
+	p.performer_type,
+	se.subevent_id,
+	se.subevent_type,
+	se.subevent_start_date,
+	se.subevent_end_date,
+	e.event_name,
+	e.event_start_date,
+	e.event_end_date,
+	v.venue_name,
+	v.venue_type,
+	v.venue_capacity
+FROM
+	(SELECT * FROM Subevent WHERE subevent_id IN (SELECT subevent_id FROM Subevent)) AS se
+JOIN
+	(SELECT performer_id, performer_name, performer_type FROM Performer WHERE performer_id IN (SELECT performer_id FROM Performer)) AS p
+	ON se.performer_id = p.performer_id
+JOIN
+	(SELECT event_id, event_name, event_start_date, event_end_date FROM Event WHERE event_id IN (SELECT event_id FROM Event)) AS e
+	ON se.event_id = e.event_id
+JOIN
+	(SELECT venue_id, venue_name, venue_type, venue_capacity FROM Venue WHERE venue_id IN (SELECT venue_id FROM Venue)) AS v
+	ON se.venue_id = v.venue_id
+WHERE
+	se.subevent_start_date IN (
+    	SELECT subevent_start_date
+    	FROM Subevent
+    	WHERE subevent_start_date IS NOT NULL
+	)
+ORDER BY
+	p.performer_name,
+	(SELECT subevent_start_date FROM Subevent WHERE subevent_id = se.subevent_id LIMIT 1),
+	se.subevent_start_date;
+
+SELECT customer_name || ' ' || customer_surname as customer_fullname,
+	customer_email, COUNT(*) as participated_in, e_s.event_id, e_s.subevent_count
+FROM
+	(SELECT customer_id, customer_name, customer_surname, customer_email
+	FROM CUSTOMER
+	WHERE customer_name ~'^Ab') c
+INNER JOIN
+	(
+	SELECT *
+	FROM PURCHASE
+	WHERE EXTRACT(MONTH FROM purchase_date) IN (1, 2, 5, 6,7,9, 10, 12) AND purchase_total_price > 10.009
+	) pr ON pr.customer_id = c.customer_id
+
+INNER JOIN
+	TICKET t ON t.purchase_id = pr.purchase_id
+
+INNER JOIN
+	(
+	SELECT e.event_id, e.event_name, e.event_start_date, COUNT(s.subevent_id) as subevent_count, s.performer_id, e.event_status
+	FROM
+		(SELECT *
+		FROM event
+		WHERE event_status='finished' AND EXTRACT(MONTH FROM event_start_date) IN (5, 6, 7, 8, 9,10)
+		) e
+	INNER JOIN
+		SUBEVENT s ON s.event_id = e.event_id
+	GROUP BY e.event_id, e.event_name, s.performer_id, e.event_status, e.event_start_date
+	) e_s ON e_s.event_id = t.event_id
+
+GROUP BY customer_name, customer_surname, customer_email, e_s.event_id, e_s.subevent_count
+HAVING COUNT(*) > 1
+LIMIT 100
+;
+
+SELECT
+  v.venue_name,
+  v.venue_capacity,
+  a.address_city,
+  se.seat_name,
+  t.ticket_type,
+  t.ticket_price,
+  c.customer_email
+
+FROM
+  venue v
+  INNER JOIN address a ON v.venue_address_id = a.address_id
+  INNER JOIN stage st ON st.venue_id = v.venue_id
+  INNER JOIN seat se ON se.stage_id = st.stage_id
+  INNER JOIN ticket t ON se.seat_id = t.ticket_seat_id
+  INNER JOIN purchase p ON p.purchase_id = t.purchase_id
+  INNER JOIN customer c ON c.customer_id = p.customer_id
+WHERE
+  a.address_city ~ '^[A-F]' AND
+  v.venue_capacity > 6000 AND
+  t.ticket_price < 100.00 AND
+  c.customer_name ~ '^[A-O]' AND
+  EXTRACT(MONTH FROM c.customer_birth_date) IN (1,2,3,4,5,6)
+ORDER BY
+  t.ticket_price DESC
+LIMIT 500;
